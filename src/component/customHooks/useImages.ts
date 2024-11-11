@@ -1,20 +1,24 @@
-import { useEffect, useState } from "react";
+import { CSSProperties, useEffect, useState } from "react";
 import { ImagesResponse } from "../utils/types";
 
 const TEMPLATE_PARAM_KEY = "template";
 const PAIRED_IMAGE_PATHS_PARAM_KEY = "paired_image_paths";
 const CONCAT_IMAGE_FILENAMES_PARAM_KEY = "concat_image_filenames";
 
+// IMPORTANT NOTE: For the next developer, this is the type of the template object
+// follow this type when creating a new template
 export type TemplateT = {
-  outerContainer: any;
-  beforeImageContainer: any;
-  beforeImage: any;
-  afterImageContainer: any;
-  afterImage: any;
-  watermarkImageContainer: any;
-  watermarkImage: any;
-  beforeText: any;
-  afterText: any;
+  beforeImageContainer: CSSProperties;
+  afterImageContainer: CSSProperties;
+  outerContainer: CSSProperties;
+  beforeImage: CSSProperties;
+  afterImage: CSSProperties;
+  texts: CSSProperties[];
+  images: {
+    src: string; // IMPORTANT NOTE: If there is a CORS issue with the image src, the concatenation will fail
+    image: CSSProperties;
+    imageContainer: CSSProperties;
+  }[];
 };
 
 // TODO: Come up with a better name for this hook

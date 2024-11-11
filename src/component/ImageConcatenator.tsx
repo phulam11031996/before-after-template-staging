@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, CSSProperties } from "react";
 import useImages from "./customHooks/useImages";
 import { toPng } from "html-to-image";
 import { base64ToBlob } from "./utils/helpers";
-import "./ImageConcatenator.css";
 import { v4 as uuidv4 } from "uuid";
 
 const TEMPLATE_WIDTH = "500px";
@@ -73,96 +72,58 @@ export default function ImageConcatenator() {
   if (!template) return null;
 
   return (
-    <div
-      style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        background: "grey",
-        overflow: "auto",
-        alignItems: "center",
-        gap: "20px",
-        padding: "20px",
-      }}
-    >
-      {imagesData?.images.map((image, index) => {
-        return (
+    <>
+      {imagesData?.images.map((image, index) => (
+        <div
+          key={index}
+          ref={templateContainerRef}
+          className="template-container"
+          style={{
+            width: TEMPLATE_WIDTH,
+            height: TEMPLATE_WIDTH,
+            ...template?.outerContainer,
+          }}
+        >
           <div
             style={{
-              width: TEMPLATE_WIDTH,
-              height: TEMPLATE_WIDTH,
-              position: "relative",
-              ...template?.outerContainer,
+              ...template?.beforeImageContainer,
             }}
-            className="template-container"
-            ref={templateContainerRef}
-            key={index}
           >
-            <div
-              style={{
-                ...template?.beforeImageContainer,
-              }}
-              className="image-container"
-            >
-              <img
-                style={{ ...template?.beforeImage }}
-                src={image.before_image}
-                alt="before"
-              />
-            </div>
-            <div
-              style={{ ...template?.afterImageContainer }}
-              className="image-container"
-            >
-              <img
-                style={{ ...template?.afterImage }}
-                src={image.after_image}
-                alt="after"
-              />
-            </div>
-            {template?.watermarkImage?.src && (
-              <div
-                style={{
-                  ...template?.watermarkImageContainer,
-                }}
-                className="image-container"
-              >
-                <img
-                  style={{ ...template?.watermarkImage }}
-                  // TODO: Replace default watermark with clinicos watermark url to prevent single point of failure
-                  // POINT THIS OUT TO ABATE THIS IS IMPORTANT
-                  src={template?.watermarkImage?.src ?? ""}
-                  alt="watermark"
-                />
-              </div>
-            )}
-            <span
-              style={{
-                ...template?.beforeText,
-              }}
-              className="text"
-            >
-              {template?.beforeText?.textContent || "Before"}
-            </span>
-            <span
-              style={{
-                ...template?.afterText,
-              }}
-              className="text"
-            >
-              {template?.afterText?.textContent || "After"}
-            </span>
+            <img
+              style={{ ...template?.beforeImage }}
+              src={image.before_image}
+              alt=""
+            />
           </div>
-        );
-      })}
-      <button onClick={handleExport}>Export as Image</button>
-      <button onClick={() => {}}>Save Template</button>
-      <pre
-        style={{ background: "white", padding: "20px", width: TEMPLATE_WIDTH }}
-      >
-        {JSON.stringify(template, null, 2)}
-      </pre>
+          <div style={{ ...template?.afterImageContainer }}>
+            <img
+              style={{ ...template?.afterImage }}
+              src={image.after_image}
+              alt=""
+            />
+          </div>
+          {template?.images.map(
+            (
+              element: {
+                src: string;
+                image: CSSProperties;
+                imageContainer: CSSProperties;
+              },
+              index: any,
+            ) => (
+              <div key={index} style={{ ...element.imageContainer }}>
+                <img style={{ ...element.image }} src={element.src} alt="" />
+              </div>
+            ),
+          )}
+          {template?.texts.map((element: CSSProperties, index: any) => (
+            <span key={index} style={{ ...element }}>
+              {element.content}
+            </span>
+          ))}
+        </div>
+      ))}
       {isDone && <span id="finish-concatenate">POST /upload-images send</span>}
-    </div>
+    </>
   );
 }
