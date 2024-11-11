@@ -19,6 +19,7 @@ export type TemplateT = {
     image: CSSProperties;
     imageContainer: CSSProperties;
   }[];
+  divs: CSSProperties[];
 };
 
 // TODO: Come up with a better name for this hook

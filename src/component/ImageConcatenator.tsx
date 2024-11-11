@@ -17,7 +17,10 @@ export default function ImageConcatenator() {
   const handleExport = () => {
     const templateContainers = document.querySelectorAll(".template-container");
     for (let i = 0; i < templateContainers.length; i++) {
-      toPng(templateContainers[i] as HTMLElement, { cacheBust: true })
+      toPng(templateContainers[i] as HTMLElement, {
+        cacheBust: true,
+        pixelRatio: 1,
+      })
         .then((dataUrl) => {
           const imageBlob = base64ToBlob(dataUrl);
           setTemplateImages((prev) => [...prev, imageBlob]);
@@ -120,6 +123,9 @@ export default function ImageConcatenator() {
             <span key={index} style={{ ...element }}>
               {element.content}
             </span>
+          ))}
+          {template?.divs.map((element: CSSProperties, index: any) => (
+            <div key={index} style={{ ...element }}></div>
           ))}
         </div>
       ))}
