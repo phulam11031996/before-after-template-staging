@@ -4,8 +4,6 @@ import { toPng } from "html-to-image";
 import { base64ToBlob } from "./utils/helpers";
 import { v4 as uuidv4 } from "uuid";
 
-const TEMPLATE_WIDTH = "500px";
-
 export default function ImageConcatenator() {
   const { imagesData, template, concatImageFilenames } = useImages();
   const [isDone, setIsDone] = useState<boolean>(false);
@@ -19,7 +17,7 @@ export default function ImageConcatenator() {
     for (let i = 0; i < templateContainers.length; i++) {
       toPng(templateContainers[i] as HTMLElement, {
         cacheBust: true,
-        pixelRatio: 1,
+        pixelRatio: 2,
       })
         .then((dataUrl) => {
           const imageBlob = base64ToBlob(dataUrl);
@@ -82,8 +80,6 @@ export default function ImageConcatenator() {
           ref={templateContainerRef}
           className="template-container"
           style={{
-            width: TEMPLATE_WIDTH,
-            height: TEMPLATE_WIDTH,
             ...template?.outerContainer,
           }}
         >
@@ -105,28 +101,31 @@ export default function ImageConcatenator() {
               alt=""
             />
           </div>
-          {template?.images.map(
-            (
-              element: {
-                src: string;
-                image: CSSProperties;
-                imageContainer: CSSProperties;
-              },
-              index: any,
-            ) => (
-              <div key={index} style={{ ...element.imageContainer }}>
-                <img style={{ ...element.image }} src={element.src} alt="" />
-              </div>
-            ),
-          )}
-          {template?.texts.map((element: CSSProperties, index: any) => (
-            <span key={index} style={{ ...element }}>
-              {element.content}
-            </span>
-          ))}
-          {template?.divs.map((element: CSSProperties, index: any) => (
-            <div key={index} style={{ ...element }}></div>
-          ))}
+          {template?.images &&
+            template?.images.map(
+              (
+                element: {
+                  src: string;
+                  image: CSSProperties;
+                  imageContainer: CSSProperties;
+                },
+                index: any,
+              ) => (
+                <div key={index} style={{ ...element.imageContainer }}>
+                  <img style={{ ...element.image }} src={element.src} alt="" />
+                </div>
+              ),
+            )}
+          {template?.texts &&
+            template?.texts.map((element: CSSProperties, index: any) => (
+              <span key={index} style={{ ...element }}>
+                {element.content}
+              </span>
+            ))}
+          {template.divs &&
+            template?.divs.map((element: CSSProperties, index: any) => (
+              <div key={index} style={{ ...element }}></div>
+            ))}
         </div>
       ))}
       {isDone && <span id="finish-concatenate">POST /upload-images send</span>}
