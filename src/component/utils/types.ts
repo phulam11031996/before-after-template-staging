@@ -2,6 +2,7 @@
 export type ImageData = {
   before_image: string;
   after_image: string;
+  template_width: number;
 };
 
 export type ImagesResponse = {
