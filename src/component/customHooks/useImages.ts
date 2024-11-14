@@ -5,6 +5,43 @@ const TEMPLATE_PARAM_KEY = "template";
 const PAIRED_IMAGE_PATHS_PARAM_KEY = "paired_image_paths";
 const CONCAT_IMAGE_FILENAMES_PARAM_KEY = "concat_image_filenames";
 
+// This coefficient is used to calculate the width of the template based on the height
+// the bigger the coefficient, the bigger the template width
+// It should be within the range of 1 to 2
+const DYNAMIC_TEMPLATE_WIDH_COEFFICIENT = 1.5;
+
+const calculateTemplateWidth = (
+  templateHeight: string | number | undefined,
+  imageSrc: string,
+): Promise<number> => {
+  if (
+    typeof templateHeight === "undefined" ||
+    typeof templateHeight === "number"
+  ) {
+    return Promise.resolve(2000); // Default width
+  }
+
+  const imageHeight = parseInt(templateHeight.replace("px", ""));
+
+  return new Promise((resolve) => {
+    const img = new Image();
+
+    img.onload = () => {
+      const aspectRatio = img.naturalWidth / img.naturalHeight;
+      const imageWidth = Math.floor(
+        aspectRatio * imageHeight * DYNAMIC_TEMPLATE_WIDH_COEFFICIENT,
+      );
+      resolve(imageWidth);
+    };
+
+    img.onerror = () => {
+      resolve(2000); // Default width on error
+    };
+
+    img.src = imageSrc;
+  });
+};
+
 // IMPORTANT NOTE: For the next developer, this is the type of the template object
 // follow this type when creating a new template
 export type TemplateT = {
@@ -58,8 +95,27 @@ const useImages = () => {
           throw new Error("Network response was not ok");
         }
 
-        const data: ImagesResponse = await response.json();
-        setImagesData(data);
+        const data = await response.json();
+
+        // Calculate template width for each image
+        const templateWidths = await Promise.all(
+          data.images.map(
+            async (image: { before_image: string; after_image: string }) => {
+              const templateWidth = await calculateTemplateWidth(
+                JSON.parse(template)?.outerContainer?.height,
+                image.before_image,
+              );
+
+              return {
+                before_image: image.before_image,
+                after_image: image.after_image,
+                template_width: templateWidth,
+              };
+            },
+          ),
+        );
+
+        setImagesData({ images: templateWidths });
       } catch (error) {
         console.error(error);
         setError(true);

@@ -17,7 +17,7 @@ export default function ImageConcatenator() {
     for (let i = 0; i < templateContainers.length; i++) {
       toPng(templateContainers[i] as HTMLElement, {
         cacheBust: true,
-        pixelRatio: 2,
+        pixelRatio: 1,
       })
         .then((dataUrl) => {
           const imageBlob = base64ToBlob(dataUrl);
@@ -81,6 +81,7 @@ export default function ImageConcatenator() {
           className="template-container"
           style={{
             ...template?.outerContainer,
+            width: `${image.template_width}px`,
           }}
         >
           <div
