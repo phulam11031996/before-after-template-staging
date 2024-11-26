@@ -43,16 +43,6 @@ const calculateTemplateWidth = (
             : 0;
         const templateAspectRatio = templateImageWidth / templateImageHeight;
 
-        const templateImageWidthPx: number =
-          typeof templateDefinition.beforeImageContainer.width === "string" &&
-          templateDefinition.beforeImageContainer.width.includes("%")
-            ? (parseFloat(
-                templateDefinition.beforeImageContainer.width.replace("%", ""),
-              ) *
-                TEMPLATE_WIDTH) /
-              100
-            : 0;
-
         const borderHorizontalPx: number =
           typeof templateDefinition.outerContainer.borderWidth === "string"
             ? 2 *
@@ -63,18 +53,10 @@ const calculateTemplateWidth = (
               ? 2 * templateDefinition.outerContainer.borderWidth
               : 0;
 
-        const unusedWidthPx =
-          TEMPLATE_WIDTH -
-          Math.min(templateImageWidthPx + templateImageWidthPx, 1000);
-
         const result =
           TEMPLATE_WIDTH * (pictureAspectRatio / templateAspectRatio) +
-          unusedWidthPx * (pictureAspectRatio / templateAspectRatio) +
           borderHorizontalPx;
         const imageWidth = Math.floor(result);
-
-        console.log("result", result);
-        console.log("borderHorizontalPx", borderHorizontalPx);
 
         resolve({
           imageWidth,
@@ -154,7 +136,7 @@ const useImages = () => {
             async (image: { before_image: string; after_image: string }) => {
               const templateWidth = await calculateTemplateWidth(
                 JSON.parse(template),
-                image.before_image,
+                image.after_image,
               );
 
               return {
