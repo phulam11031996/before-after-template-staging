@@ -4,38 +4,89 @@ import { ImagesResponse } from "../utils/types";
 const TEMPLATE_PARAM_KEY = "template";
 const PAIRED_IMAGE_PATHS_PARAM_KEY = "paired_image_paths";
 const CONCAT_IMAGE_FILENAMES_PARAM_KEY = "concat_image_filenames";
-
-// This coefficient is used to calculate the width of the template based on the height
-// the bigger the coefficient, the bigger the template width
-// It should be within the range of 1 to 2
-const DYNAMIC_TEMPLATE_WIDH_COEFFICIENT = 1.5;
+const TEMPLATE_WIDTH = 1000;
+const TEMPLATE_HEIGHT = 1000;
 
 const calculateTemplateWidth = (
-  templateHeight: string | number | undefined,
+  templateDefinition: TemplateT,
   imageSrc: string,
-): Promise<number> => {
-  if (
-    typeof templateHeight === "undefined" ||
-    typeof templateHeight === "number"
-  ) {
-    return Promise.resolve(2000); // Default width
-  }
-
-  const imageHeight = parseInt(templateHeight.replace("px", ""));
-
+): Promise<{ imageWidth: number; imageHeight: number }> => {
   return new Promise((resolve) => {
     const img = new Image();
 
     img.onload = () => {
-      const aspectRatio = img.naturalWidth / img.naturalHeight;
-      const imageWidth = Math.floor(
-        aspectRatio * imageHeight * DYNAMIC_TEMPLATE_WIDH_COEFFICIENT,
-      );
-      resolve(imageWidth);
+      try {
+        if (
+          typeof templateDefinition.beforeImageContainer.width === "number" ||
+          (typeof templateDefinition.beforeImageContainer.width === "string" &&
+            !templateDefinition.beforeImageContainer.width.includes("%"))
+        ) {
+          throw new Error(
+            "Template width is a number, expected string and should be a percentage value",
+          );
+        }
+
+        const pictureAspectRatio = img.naturalWidth / img.naturalHeight;
+
+        const templateImageWidth: number =
+          typeof templateDefinition.beforeImageContainer.width === "string"
+            ? parseFloat(
+                templateDefinition.beforeImageContainer.width.replace("%", ""),
+              )
+            : 0;
+
+        const templateImageHeight: number =
+          typeof templateDefinition.beforeImageContainer.height === "string"
+            ? parseFloat(
+                templateDefinition.beforeImageContainer.height.replace("%", ""),
+              )
+            : 0;
+        const templateAspectRatio = templateImageWidth / templateImageHeight;
+
+        const templateImageWidthPx: number =
+          typeof templateDefinition.beforeImageContainer.width === "string" &&
+          templateDefinition.beforeImageContainer.width.includes("%")
+            ? (parseFloat(
+                templateDefinition.beforeImageContainer.width.replace("%", ""),
+              ) *
+                TEMPLATE_WIDTH) /
+              100
+            : 0;
+
+        const borderHorizontalPx: number =
+          typeof templateDefinition.outerContainer.borderWidth === "string"
+            ? 2 *
+              parseFloat(
+                templateDefinition.outerContainer.borderWidth.replace("px", ""),
+              )
+            : typeof templateDefinition.outerContainer.borderWidth === "number"
+              ? 2 * templateDefinition.outerContainer.borderWidth
+              : 0;
+
+        const unusedWidthPx =
+          TEMPLATE_WIDTH -
+          Math.min(templateImageWidthPx + templateImageWidthPx, 1000);
+
+        const result =
+          TEMPLATE_WIDTH * (pictureAspectRatio / templateAspectRatio) +
+          unusedWidthPx * (pictureAspectRatio / templateAspectRatio) +
+          borderHorizontalPx;
+        const imageWidth = Math.floor(result);
+
+        console.log("result", result);
+        console.log("borderHorizontalPx", borderHorizontalPx);
+
+        resolve({
+          imageWidth,
+          imageHeight: TEMPLATE_HEIGHT + borderHorizontalPx,
+        });
+      } catch (error) {
+        console.log("Error calculating template width", error);
+      }
     };
 
     img.onerror = () => {
-      resolve(2000); // Default width on error
+      throw new Error("Image failed to load while calculating template width");
     };
 
     img.src = imageSrc;
@@ -98,24 +149,25 @@ const useImages = () => {
         const data = await response.json();
 
         // Calculate template width for each image
-        const templateWidths = await Promise.all(
+        const templateWidthsAndHeights = await Promise.all(
           data.images.map(
             async (image: { before_image: string; after_image: string }) => {
               const templateWidth = await calculateTemplateWidth(
-                JSON.parse(template)?.outerContainer?.height,
+                JSON.parse(template),
                 image.before_image,
               );
 
               return {
                 before_image: image.before_image,
                 after_image: image.after_image,
-                template_width: templateWidth,
+                template_width: templateWidth.imageWidth,
+                template_height: templateWidth.imageHeight,
               };
             },
           ),
         );
 
-        setImagesData({ images: templateWidths });
+        setImagesData({ images: templateWidthsAndHeights });
       } catch (error) {
         console.error(error);
         setError(true);

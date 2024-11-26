@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, CSSProperties } from "react";
 import useImages from "./customHooks/useImages";
 import { toPng } from "html-to-image";
-import { base64ToBlob } from "./utils/helpers";
-import { v4 as uuidv4 } from "uuid";
+import { base64ToBlob, createUUID } from "./utils/helpers";
 
 export default function ImageConcatenator() {
   const { imagesData, template, concatImageFilenames } = useImages();
@@ -42,7 +41,7 @@ export default function ImageConcatenator() {
           const fileName =
             index < concatImageFilenames.length
               ? concatImageFilenames[index]
-              : `${uuidv4()}.jpg`;
+              : `${createUUID()}.jpg`;
 
           const file =
             image instanceof Blob
@@ -82,6 +81,7 @@ export default function ImageConcatenator() {
           style={{
             ...template?.outerContainer,
             width: `${image.template_width}px`,
+            height: `${image.template_height}px`,
           }}
         >
           <div
